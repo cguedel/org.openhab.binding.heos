@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,9 +11,7 @@ package org.openhab.binding.heos.handler;
 import static org.openhab.binding.heos.HeosBindingConstants.*;
 import static org.openhab.binding.heos.internal.resources.HeosConstants.GID;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -52,8 +50,8 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
         gid = thing.getConfiguration().get(GID).toString();
         this.heosGroup = new HeosGroup();
         this.heosGroup.setGid(gid);
-        this.heosGroup.setGroupMemberHash(thing.getConfiguration().get(GROUP_MEMBER_HASH).toString());
-        setGroupMemberPidList();
+        // this.heosGroup.setGroupMemberHash(thing.getConfiguration().get(GROUP_MEMBER_HASH).toString());
+        // setGroupMemberPidList();
     }
 
     @Override
@@ -70,9 +68,8 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
     public void initialize() {
         this.gid = this.thing.getConfiguration().get(GID).toString();
         this.heosGroup.setGid(gid);
-        api.registerforChangeEvents(this);
         ScheduledExecutorService executerPool = Executors.newScheduledThreadPool(1);
-        executerPool.schedule(new InitializationRunnable(), 4, TimeUnit.SECONDS);
+        executerPool.schedule(new InitializationRunnable(), 0, TimeUnit.SECONDS);
     }
 
     @Override
@@ -109,16 +106,6 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
         // Do nothing
     }
 
-    // Generates the groupMember from the properties. Is needed to generate group after restart of OpenHab.
-
-    private void setGroupMemberPidList() {
-        String memberListString = thing.getProperties().get(GROUP_MEMBER_PID_LIST);
-        memberListString = memberListString.substring(1, memberListString.length() - 1);
-        String array[] = memberListString.split(", "); // important: Keep the white space.
-        List<String> memberPidList = Arrays.asList(array);
-        heosGroup.setGroupMemberPidList(memberPidList);
-    }
-
     /**
      * Sets the status of the HEOS group to OFFLINE.
      * Also sets the UNGROUP channel to OFF and the CONTROL
@@ -130,6 +117,13 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
         updateState(CH_ID_UNGROUP, OnOffType.OFF);
         updateState(CH_ID_CONTROL, PlayPauseType.PAUSE);
         updateStatus(ThingStatus.OFFLINE);
+    }
+
+    @Override
+    public void setStatusOnline() {
+        api.registerforChangeEvents(this);
+        updateStatus(ThingStatus.ONLINE);
+        updateState(CH_ID_UNGROUP, OnOffType.ON);
     }
 
     /**
@@ -186,16 +180,17 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
         public void run() {
             initChannelHandlerFatory();
             heosGroup = heos.getGroupState(heosGroup);
-            if (!heosGroup.isOnline() || !heosGroup.getGroupMemberHash()
-                    .equals(thing.getConfiguration().get(GROUP_MEMBER_HASH).toString())) {
+            if (!heosGroup.isOnline()) {
                 bridge.setThingStatusOffline(thing.getUID());
                 setStatusOffline();
                 return;
             }
-            updateStatus(ThingStatus.ONLINE);
+
+            setStatusOnline();
+            heosGroup.setGroupMemberPidList(heosGroup.getGroupMemberPidList());
             bridge.setThingStatusOnline(thing.getUID()); // informs the System about the existing group
             HashMap<String, HeosGroup> usedToFillOldGroupMap = new HashMap<>();
-            usedToFillOldGroupMap.put(heosGroup.getNameHash(), heosGroup);
+            usedToFillOldGroupMap.put(heosGroup.getGid(), heosGroup);
             heos.addHeosGroupToOldGroupMap(usedToFillOldGroupMap);
             id = heosGroup.getGid(); // Updates the id of the group. Needed if group leader has changed
             refreshChannels();

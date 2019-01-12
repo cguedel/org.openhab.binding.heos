@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -112,7 +112,7 @@ public class HeosPlayerDiscovery extends AbstractDiscoveryService {
                     // possible to add player to a group. Keeping the Name lets the binding still identifying the group
                     // as known
 
-                    ThingUID uid = new ThingUID(THING_TYPE_GROUP, group.getGroupMemberHash());
+                    ThingUID uid = new ThingUID(THING_TYPE_GROUP, bridgeUID, group.getGid());
                     HashMap<String, Object> properties = new HashMap<String, Object>();
                     properties.put(NAME, group.getName());
                     properties.put(GID, group.getGid());
@@ -141,7 +141,8 @@ public class HeosPlayerDiscovery extends AbstractDiscoveryService {
         if (!removedGroupMap.isEmpty()) {
             for (String key : removedGroupMap.keySet()) {
                 // The same as above!
-                ThingUID uid = new ThingUID(THING_TYPE_GROUP, removedGroupMap.get(key).getGroupMemberHash());
+                ThingUID uid = new ThingUID(THING_TYPE_GROUP, bridge.getThing().getUID(),
+                        removedGroupMap.get(key).getGid());
                 logger.info("Removed HEOS Group: {}", uid);
                 thingRemoved(uid);
             }

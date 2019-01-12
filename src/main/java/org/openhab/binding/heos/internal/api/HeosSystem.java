@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -442,7 +442,7 @@ public class HeosSystem {
             // Switched to NameHash value
             heosGroup.generateGroupUID();
 
-            groupMapNew.put(heosGroup.getNameHash(), heosGroup);
+            groupMapNew.put(heosGroup.getGid(), heosGroup);
             removedGroupMap = compareGroupMaps(groupMapNew, groupMapOld);
             groupMapOld.clear(); // clear the old map so that only the currently available groups are added in the next
                                  // step.

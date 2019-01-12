@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -54,8 +54,8 @@ public class HeosSystemEventListener {
     /**
      * Notifies the registered listener of a changed state type event
      *
-     * @param pid the ID of the player or group which has changed
-     * @param event the name of the event (see {@link HeosConstants} for event types)
+     * @param pid     the ID of the player or group which has changed
+     * @param event   the name of the event (see {@link HeosConstants} for event types)
      * @param command the command of the event
      */
 
@@ -66,7 +66,7 @@ public class HeosSystemEventListener {
     /**
      * Notifies the registered listener of a changed media type event
      *
-     * @param pid the ID of the player or group which has changed
+     * @param pid  the ID of the player or group which has changed
      * @param info an HashMap which contains the media information
      */
 
@@ -77,8 +77,8 @@ public class HeosSystemEventListener {
     /**
      * Notifies the registered listener if a change of the bridge state
      *
-     * @param event the event type
-     * @param result the result (success or fail)
+     * @param event   the event type
+     * @param result  the result (success or fail)
      * @param command the command of the event
      */
 

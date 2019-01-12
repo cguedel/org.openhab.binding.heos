@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 public abstract class HeosChannelHandler {
 
     protected Object handler;
-    protected HeosBridgeHandler bridge;
-    protected HeosFacade api;
+    protected final HeosBridgeHandler bridge;
+    protected final HeosFacade api;
     protected String id;
     protected Command command;
     protected ChannelUID channelUID;
@@ -36,42 +36,21 @@ public abstract class HeosChannelHandler {
     /**
      *
      * @param bridge Requires the HeosBridgeHandler
-     * @param api The HeosFacade class
+     * @param api    The HeosFacade class
      */
-    public HeosChannelHandler(HeosBridgeHandler bridge, HeosFacade api) {
+    public HeosChannelHandler(String id, HeosBridgeHandler bridge, HeosFacade api) {
         this.bridge = bridge;
         this.api = api;
+        this.id = id;
     }
 
     /**
      * Handle a command received from a channel. Requires the class which
      * wants to handle the command to decide which subclass has to be used
      *
-     * @param command the command to handle
-     * @param id of the group or player
-     * @param handler The class which wants to handle the command
-     * @param channelUID the channelUID of the handleCommand function
-     */
-
-    public void handleCommand(Command command, String id, Object handler, ChannelUID channelUID) {
-        this.command = command;
-        this.id = id;
-        this.handler = handler;
-        this.channelUID = channelUID;
-
-        if (handler instanceof HeosPlayerHandler) {
-            handleCommandPlayer();
-        } else if (handler instanceof HeosGroupHandler) {
-            handleCommandGroup();
-        }
-    }
-
-    /**
-     * Handle a command for classes without an id. Used
-     * for BridgeHandler
-     *
-     * @param command the command to handle
-     * @param handler The class which wants to handle the command
+     * @param command    the command to handle
+     * @param id         of the group or player
+     * @param handler    The class which wants to handle the command
      * @param channelUID the channelUID of the handleCommand function
      */
 
@@ -79,7 +58,12 @@ public abstract class HeosChannelHandler {
         this.command = command;
         this.handler = handler;
         this.channelUID = channelUID;
-        if (handler instanceof HeosBridgeHandler) {
+
+        if (handler instanceof HeosPlayerHandler) {
+            handleCommandPlayer();
+        } else if (handler instanceof HeosGroupHandler) {
+            handleCommandGroup();
+        } else if (handler instanceof HeosBridgeHandler) {
             handleCommandBridge();
         }
     }

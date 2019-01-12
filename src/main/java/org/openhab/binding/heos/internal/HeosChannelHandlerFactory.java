@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -47,9 +47,10 @@ public class HeosChannelHandlerFactory {
         this.api = api;
     }
 
-    public HeosChannelHandler getChannelHandler(ChannelUID channelUID) {
+    public HeosChannelHandler getChannelHandler(String id, ChannelUID channelUID) {
         ChannelTypeUID channelTypeUID;
         Channel channel = bridge.getThing().getChannel(channelUID.getId());
+
         if (channel == null) {
             channelTypeUID = null;
         } else {
@@ -57,50 +58,50 @@ public class HeosChannelHandlerFactory {
         }
 
         if (channelUID.getId().equals(CH_ID_CONTROL)) {
-            return new HeosChannelHandlerControl(bridge, api);
+            return new HeosChannelHandlerControl(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_VOLUME)) {
-            return new HeosChannelHandlerVolume(bridge, api);
+            return new HeosChannelHandlerVolume(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_MUTE)) {
-            return new HeosChannelHandlerMute(bridge, api);
+            return new HeosChannelHandlerMute(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_PLAY_URL)) {
-            return new HeosChannelHandlerPlayURL(bridge, api);
+            return new HeosChannelHandlerPlayURL(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_INPUTS)) {
-            return new HeosChannelHandlerInputs(bridge, api);
+            return new HeosChannelHandlerInputs(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_UNGROUP)) {
-            return new HeosChannelHandlerGrouping(bridge, api);
+            return new HeosChannelHandlerGrouping(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_RAW_COMMAND)) {
-            return new HeosChannelHandlerRawCommand(bridge, api);
+            return new HeosChannelHandlerRawCommand(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_REBOOT)) {
-            return new HeosChannelHandlerReboot(bridge, api);
+            return new HeosChannelHandlerReboot(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_DYNGROUPSHAND)) {
-            return new HeosChannelHandlerDynGroupHandling(bridge, api);
+            return new HeosChannelHandlerDynGroupHandling(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_BUILDGROUP)) {
-            return new HeosChannelHandlerBuildGroup(bridge, api);
+            return new HeosChannelHandlerBuildGroup(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_PLAYLISTS)) {
-            return new HeosChannelHandlerPlaylist(bridge, api);
+            return new HeosChannelHandlerPlaylist(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_REPEAT_MODE)) {
-            return new HeosChannelHandlerRepeatMode(bridge, api);
+            return new HeosChannelHandlerRepeatMode(id, bridge, api);
         }
         if (channelUID.getId().equals(CH_ID_SHUFFLE_MODE)) {
-            return new HeosChannelHandlerShuffleMode(bridge, api);
+            return new HeosChannelHandlerShuffleMode(id, bridge, api);
         }
         if (channelTypeUID != null) {
-            if (channelTypeUID.equals(CH_TYPE_FAVORIT)) {
-                return new HeosChannelHandlerFavoriteSelect(bridge, api);
+            if (channelTypeUID.equals(CH_TYPE_FAVORITE)) {
+                return new HeosChannelHandlerFavoriteSelect(id, bridge, api);
             }
             if (channelTypeUID.equals(CH_TYPE_PLAYER)) {
-                return new HeosChannelHandlerPlayerSelect(bridge, api);
+                return new HeosChannelHandlerPlayerSelect(id, bridge, api);
             }
         }
         return null;

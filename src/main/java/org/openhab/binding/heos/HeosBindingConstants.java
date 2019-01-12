@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2018 by the respective copyright holders.
+ * Copyright (c) 2010-2019 by the respective copyright holders.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -39,7 +39,7 @@ public class HeosBindingConstants {
     // List off all Channel Types
 
     public static final ChannelTypeUID CH_TYPE_PLAYER = new ChannelTypeUID(BINDING_ID, "ch_player");
-    public static final ChannelTypeUID CH_TYPE_FAVORIT = new ChannelTypeUID(BINDING_ID, "ch_favorit");
+    public static final ChannelTypeUID CH_TYPE_FAVORITE = new ChannelTypeUID(BINDING_ID, "ch_favorite");
     public static final ChannelTypeUID CH_TYPE_GROUP = new ChannelTypeUID(BINDING_ID, "ch_group");
 
     // List of all Channel IDs
@@ -63,7 +63,7 @@ public class HeosBindingConstants {
     public static final String CH_ID_RAW_COMMAND = "RawCommand";
     public static final String CH_ID_TYPE = "Type";
     public static final String CH_ID_PLAY_URL = "PlayUrl";
-    public static final String CH_ID_SHUFFLE_MODE = "Shuffel";
+    public static final String CH_ID_SHUFFLE_MODE = "Shuffle";
     public static final String CH_ID_REPEAT_MODE = "RepeatMode";
 
     public static final String HOST = "ipAddress";
