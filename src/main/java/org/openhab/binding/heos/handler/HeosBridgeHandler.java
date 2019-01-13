@@ -62,6 +62,9 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     private List<String> heosPlaylists = new ArrayList<String>();
 
+    private HashMap<String, ThingUID> idToPlayerMap = new HashMap<>();
+    private HashMap<String, ThingUID> idToGroupMap = new HashMap<>();
+
     private HashMap<ThingUID, ThingHandler> handlerList = new HashMap<>();
     private HashMap<String, String> selectedPlayer = new HashMap<String, String>();
     private ArrayList<String[]> selectedPlayerList = new ArrayList<String[]>();
@@ -171,6 +174,15 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     @Override
     public synchronized void childHandlerInitialized(ThingHandler childHandler, Thing childThing) {
+
+        if (childThing.getThingTypeUID().equals(THING_TYPE_PLAYER)) {
+            String id = childThing.getConfiguration().get(PID).toString();
+            idToPlayerMap.put(id, childThing.getUID());
+        } else {
+            String id = childThing.getConfiguration().get(GID).toString();
+            idToGroupMap.put(id, childThing.getUID());
+        }
+
         handlerList.put(childThing.getUID(), childHandler);
         thingOnlineState.put(childThing.getUID(), ThingStatus.OFFLINE);
         this.addPlayerChannel(childThing);
@@ -197,11 +209,17 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                                             // disposal process.
             return;
         } else if (childThing.getConfiguration().get(TYPE).equals(PLAYER)) {
-            String channelIdentifyer = "P" + childThing.getConfiguration().get(PID).toString();
+            String pid = childThing.getConfiguration().get(PID).toString();
+            String channelIdentifyer = "P" + pid;
             this.removeChannel(CH_TYPE_PLAYER, channelIdentifyer);
+
+            idToPlayerMap.remove(pid);
         } else {
-            String channelIdentifyer = "G" + childThing.getConfiguration().get(GID).toString();
+            String gid = childThing.getConfiguration().get(GID).toString();
+            String channelIdentifyer = "G" + gid;
             this.removeChannel(CH_TYPE_PLAYER, channelIdentifyer);
+
+            idToGroupMap.remove(gid);
         }
 
         handlerList.remove(childThing.getUID(), childHandler);
@@ -275,9 +293,19 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     @Override
     public void thingDiscovered(DiscoveryService source, DiscoveryResult result) {
-        if (handlerList.containsKey(result.getThingUID())) {
-            if (thingOnlineState.containsKey(result.getThingUID())) {
-                handlerList.get(result.getThingUID()).initialize();
+        ThingUID uid = null;
+
+        if (result.getThingTypeUID().equals(THING_TYPE_PLAYER)) {
+            String pid = result.getProperties().get(PID).toString();
+            uid = idToPlayerMap.getOrDefault(pid, result.getThingUID());
+        } else {
+            String gid = result.getProperties().get(GID).toString();
+            uid = idToGroupMap.getOrDefault(gid, result.getThingUID());
+        }
+
+        if (handlerList.containsKey(uid)) {
+            if (thingOnlineState.containsKey(uid) && !thingOnlineState.get(uid).equals(ThingStatus.ONLINE)) {
+                handlerList.get(uid).initialize();
             }
         }
     }
@@ -290,20 +318,31 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
      * is removed from the handler list via childHandlerDisposed()
      */
 
+    @SuppressWarnings("deprecation")
     @Override
     public void thingRemoved(DiscoveryService source, ThingUID thingUID) {
         logger.info("Removing Thing: {}.", thingUID);
-        if (handlerList.get(thingUID) != null) {
+
+        ThingUID uid = null;
+        if (thingUID.getThingTypeUID().equals(THING_TYPE_PLAYER)) {
+            String pid = thingUID.getId();
+            uid = idToPlayerMap.getOrDefault(pid, thingUID);
+        } else {
+            String gid = thingUID.getId();
+            uid = idToGroupMap.getOrDefault(gid, thingUID);
+        }
+
+        if (handlerList.get(uid) != null) {
             if (!handleGroups) {
-                handlerList.get(thingUID).handleRemoval();
+                handlerList.get(uid).handleRemoval();
             } else {
-                if (handlerList.get(thingUID).getClass().equals(HeosGroupHandler.class)) {
-                    HeosGroupHandler handler = (HeosGroupHandler) handlerList.get(thingUID);
-                    thingOnlineState.put(thingUID, ThingStatus.OFFLINE);
+                if (handlerList.get(uid).getClass().equals(HeosGroupHandler.class)) {
+                    HeosGroupHandler handler = (HeosGroupHandler) handlerList.get(uid);
+                    thingOnlineState.put(uid, ThingStatus.OFFLINE);
                     handler.setStatusOffline();
-                } else if (handlerList.get(thingUID).getClass().equals(HeosPlayerHandler.class)) {
-                    HeosPlayerHandler handler = (HeosPlayerHandler) handlerList.get(thingUID);
-                    thingOnlineState.put(thingUID, ThingStatus.OFFLINE);
+                } else if (handlerList.get(uid).getClass().equals(HeosPlayerHandler.class)) {
+                    HeosPlayerHandler handler = (HeosPlayerHandler) handlerList.get(uid);
+                    thingOnlineState.put(uid, ThingStatus.OFFLINE);
                     handler.setStatusOffline();
                 }
             }
@@ -454,20 +493,12 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         return false;
     }
 
-    public HashMap<String, HeosPlayer> getNewPlayer() {
-        return heos.getAllPlayer();
+    public HashMap<String, HeosPlayer> getPlayers() {
+        return heos.getAllPlayers();
     }
 
-    public HashMap<String, HeosGroup> getNewGroups() {
+    public HashMap<String, HeosGroup> getGroups() {
         return heos.getGroups();
-    }
-
-    public HashMap<String, HeosGroup> getRemovedGroups() {
-        return heos.getGroupsRemoved();
-    }
-
-    public HashMap<String, HeosPlayer> getRemovedPlayer() {
-        return heos.getPlayerRemoved();
     }
 
     /**

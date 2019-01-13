@@ -41,17 +41,15 @@ import org.slf4j.LoggerFactory;
 
 public class HeosGroupHandler extends HeosThingBaseHandler {
 
-    private String gid;
+    private final String gid;
     private HeosGroup heosGroup;
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HeosGroupHandler(Thing thing, HeosSystem heos, HeosFacade api) {
         super(thing, heos, api);
         gid = thing.getConfiguration().get(GID).toString();
         this.heosGroup = new HeosGroup();
         this.heosGroup.setGid(gid);
-        // this.heosGroup.setGroupMemberHash(thing.getConfiguration().get(GROUP_MEMBER_HASH).toString());
-        // setGroupMemberPidList();
     }
 
     @Override
@@ -66,8 +64,6 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
      */
     @Override
     public void initialize() {
-        this.gid = this.thing.getConfiguration().get(GID).toString();
-        this.heosGroup.setGid(gid);
         ScheduledExecutorService executerPool = Executors.newScheduledThreadPool(1);
         executerPool.schedule(new InitializationRunnable(), 0, TimeUnit.SECONDS);
     }
@@ -175,7 +171,6 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
     }
 
     public class InitializationRunnable implements Runnable {
-        @SuppressWarnings("null")
         @Override
         public void run() {
             initChannelHandlerFatory();
@@ -189,9 +184,6 @@ public class HeosGroupHandler extends HeosThingBaseHandler {
             setStatusOnline();
             heosGroup.setGroupMemberPidList(heosGroup.getGroupMemberPidList());
             bridge.setThingStatusOnline(thing.getUID()); // informs the System about the existing group
-            HashMap<String, HeosGroup> usedToFillOldGroupMap = new HashMap<>();
-            usedToFillOldGroupMap.put(heosGroup.getGid(), heosGroup);
-            heos.addHeosGroupToOldGroupMap(usedToFillOldGroupMap);
             id = heosGroup.getGid(); // Updates the id of the group. Needed if group leader has changed
             refreshChannels();
         }

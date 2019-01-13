@@ -52,12 +52,6 @@ public class HeosSystem {
     private HeosJsonParser parser = new HeosJsonParser(response);
     private HeosEventController eventController = new HeosEventController(response, heosCommand, this);
     private HeosSendCommand sendCommand = new HeosSendCommand(commandLine, parser, response, eventController);
-    private HashMap<String, HeosPlayer> playerMapNew;
-    private HashMap<String, HeosGroup> groupMapNew;
-    private HashMap<String, HeosPlayer> playerMapOld;
-    private HashMap<String, HeosGroup> groupMapOld;
-    private HashMap<String, HeosPlayer> removedPlayerMap;
-    private HashMap<String, HeosGroup> removedGroupMap;
     private HeosFacade heosApi = new HeosFacade(this, eventController);
 
     private Logger logger = LoggerFactory.getLogger(HeosSystem.class);
@@ -161,11 +155,6 @@ public class HeosSystem {
      */
 
     public boolean establishConnection(boolean connectionDelay) {
-        this.playerMapNew = new HashMap<String, HeosPlayer>();
-        this.groupMapNew = new HashMap<String, HeosGroup>();
-        this.playerMapOld = new HashMap<String, HeosPlayer>();
-        this.groupMapOld = new HashMap<String, HeosGroup>();
-        this.removedGroupMap = new HashMap<String, HeosGroup>();
         this.commandLine = new Telnet();
         this.eventLine = new Telnet();
 
@@ -351,9 +340,7 @@ public class HeosSystem {
      * @return a HashMap with all HEOS Player in the network
      */
 
-    public synchronized HashMap<String, HeosPlayer> getAllPlayer() {
-        playerMapNew.clear();
-
+    public synchronized HashMap<String, HeosPlayer> getAllPlayers() {
         send(command().getPlayers());
         boolean resultIsEmpty = response.getPayload().getPayloadList().isEmpty();
 
@@ -362,17 +349,17 @@ public class HeosSystem {
             resultIsEmpty = response.getPayload().getPayloadList().isEmpty();
             logger.warn("HEOS System found no players.");
         }
+
         List<HashMap<String, String>> playerList = response.getPayload().getPayloadList();
+        HashMap<String, HeosPlayer> players = new HashMap<>();
 
         for (HashMap<String, String> player : playerList) {
             HeosPlayer heosPlayer = new HeosPlayer();
             heosPlayer.updatePlayerInfo(player);
-            playerMapNew.put(heosPlayer.getPid(), heosPlayer);
-            removedPlayerMap = comparePlayerMaps(playerMapNew, playerMapOld);
-            playerMapOld.clear();
-            playerMapOld.putAll(playerMapNew);
+            players.put(heosPlayer.getPid(), heosPlayer);
         }
-        return playerMapNew;
+
+        return players;
     }
 
     private synchronized HeosPlayer updatePlayerState(HeosPlayer heosPlayer) {
@@ -402,15 +389,14 @@ public class HeosSystem {
      */
 
     public synchronized HashMap<String, HeosGroup> getGroups() {
-        groupMapNew.clear();
-
         send(command().getGroups());
 
+        HashMap<String, HeosGroup> groups = new HashMap<>();
+
         if (response.getPayload().getPayloadList().isEmpty()) {
-            removedGroupMap = compareGroupMaps(groupMapNew, groupMapOld);
-            groupMapOld.putAll(groupMapNew);
-            return groupMapNew;
+            return groups;
         }
+
         List<HashMap<String, String>> groupList = response.getPayload().getPayloadList();
         int groupCounter = 0;
 
@@ -442,15 +428,12 @@ public class HeosSystem {
             // Switched to NameHash value
             heosGroup.generateGroupUID();
 
-            groupMapNew.put(heosGroup.getGid(), heosGroup);
-            removedGroupMap = compareGroupMaps(groupMapNew, groupMapOld);
-            groupMapOld.clear(); // clear the old map so that only the currently available groups are added in the next
-                                 // step.
-            groupMapOld.putAll(groupMapNew);
+            groups.put(heosGroup.getGid(), heosGroup);
             groupCounter++;
 
         }
-        return groupMapNew;
+
+        return groups;
     }
 
     /**
@@ -503,40 +486,6 @@ public class HeosSystem {
         return heosGroup;
     }
 
-    private HashMap<String, HeosGroup> compareGroupMaps(HashMap<String, HeosGroup> mapNew,
-            HashMap<String, HeosGroup> mapOld) {
-        HashMap<String, HeosGroup> removedItems = new HashMap<String, HeosGroup>();
-        for (String key : mapOld.keySet()) {
-            if (!mapNew.containsKey(key)) {
-                removedItems.put(key, mapOld.get(key));
-            }
-        }
-        return removedItems;
-    }
-
-    private HashMap<String, HeosPlayer> comparePlayerMaps(HashMap<String, HeosPlayer> mapNew,
-            HashMap<String, HeosPlayer> mapOld) {
-        HashMap<String, HeosPlayer> removedItems = new HashMap<String, HeosPlayer>();
-        for (String key : mapOld.keySet()) {
-            if (!mapNew.containsKey(key)) {
-                removedItems.put(key, mapOld.get(key));
-            }
-        }
-        return removedItems;
-    }
-
-    /**
-     * Be used to fill the map which contains old Groups at startup
-     * with existing HEOS groups.
-     *
-     *
-     * @param map a HashMap with {@code heosGroup.getNameHash(), heosGroup}
-     */
-
-    public void addHeosGroupToOldGroupMap(HashMap<String, HeosGroup> map) {
-        groupMapOld.putAll(map);
-    }
-
     public List<HashMap<String, String>> getFavorits() {
         send(command().browseSource(FAVORIT_SID));
         return response.getPayload().getPayloadList();
@@ -570,22 +519,6 @@ public class HeosSystem {
 
     public void setConnectionPort(int connectionPort) {
         this.connectionPort = connectionPort;
-    }
-
-    public HashMap<String, HeosPlayer> getPlayerMap() {
-        return playerMapNew;
-    }
-
-    public HashMap<String, HeosGroup> getGroupMap() {
-        return groupMapNew;
-    }
-
-    public HashMap<String, HeosGroup> getGroupsRemoved() {
-        return removedGroupMap;
-    }
-
-    public HashMap<String, HeosPlayer> getPlayerRemoved() {
-        return removedPlayerMap;
     }
 
     /**
